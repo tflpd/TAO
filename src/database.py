@@ -1,7 +1,9 @@
 import sqlite3
 import os
 import json
-from src.structs import Object, Association
+from enum import Enum
+
+from src.structs import Object, Association, invert_assoc
 
 DEFAULT_PATH = os.path.join(os.path.dirname(__file__), 'db.sqlite3')
 
@@ -34,8 +36,22 @@ class Database:
                   ''')
         self.con.commit()
 
+    # Helper methods
+
     def close(self):
         self.con.close()
+
+    def get_all_associations(self):
+        q = 'SELECT * FROM associations'
+        self.cur.execute(q)
+        keys_values_json = self.cur.fetchall()
+        assocs = []
+        if keys_values_json is not None:
+            for i in keys_values_json:
+                assocs.append(Association(i[0], i[1], i[2], i[3], json.loads(i[4])))
+        return assocs
+
+    # TAO official API endpoints
 
     def create_object(self, obj):
         keys_values_json = json.dumps(obj.keys_values)
@@ -75,18 +91,20 @@ class Database:
             "INSERT INTO associations (object_id1, atype, object_id2, creation_time, keys_values) VALUES (?, ?, ?, ?, ?)",
             [object_id1, asoc.atype, object_id2, asoc.creation_time, keys_values_json])
         self.con.commit()
+        self.add_inverse_association(asoc)
 
-    # def add_inverse_association(self, asoc):
-    #     object_id1 = asoc.object_id1
-    #     object_id2 = asoc.object_id2
-    #     keys_values_json = json.dumps(asoc.keys_values)
-    #
-    #     # self.cur.execute("INSERT OR REPLACE INTO associations (object_id1, atype, object_id2, creation_time, "
-    #     #                  "keys_values")
-    #     self.cur.execute(
-    #         "INSERT INTO associations (object_id1, atype, object_id2, creation_time, keys_values) VALUES (?, ?, ?, ?, ?)",
-    #         [object_id1, asoc.atype, object_id2, asoc.creation_time, keys_values_json])
-    #     self.con.commit()
+    def add_inverse_association(self, asoc):
+        object_id1 = asoc.object_id1
+        object_id2 = asoc.object_id2
+        keys_values_json = json.dumps(asoc.keys_values)
+        atype = invert_assoc(asoc.atype)
+
+        # self.cur.execute("INSERT OR REPLACE INTO associations (object_id1, atype, object_id2, creation_time, "
+        #                  "keys_values")
+        self.cur.execute(
+            "INSERT INTO associations (object_id1, atype, object_id2, creation_time, keys_values) VALUES (?, ?, ?, ?, ?)",
+            [object_id2, atype, object_id1, asoc.creation_time, keys_values_json])
+        self.con.commit()
 
     def delete_association(self, object_id1, association_type, object_id2):
         self.cur.execute("DELETE FROM associations WHERE object_id1 = ? AND atype = ? AND object_id2 = ?",
@@ -98,17 +116,65 @@ class Database:
                          [association_new_type, object_id1, association_old_type, object_id2])
         self.con.commit()
 
-    def get_associations(self, object_id1, association_type, objects_ids2, high, low):
-        q = 'SELECT creation_time, keys_values FROM associations WHERE object_id1 = ? AND atype = ? AND object_id2 IN (%s)' % ',' \
-            .join('?' for object_id in objects_ids2)
-        arguments = [object_id1, association_type] + objects_ids2
+    def get_associations(self, object_id1, association_type, objects_ids2, low=None, high=None):
+        if low is None and high is None:
+            q = 'SELECT creation_time, keys_values FROM associations WHERE object_id1 = ? AND atype = ? AND object_id2 IN (%s)' % ','.join(
+                '?' for object_id in objects_ids2)
+            arguments = [object_id1, association_type] + objects_ids2
+        elif low is not None and high is not None:
+            if low < 0 or low > high:
+                raise ValueError("Both low and high have to be positive. Also low must be <= high")
+            q = 'SELECT creation_time, keys_values FROM associations WHERE object_id1 = ? AND atype = ? AND creation_time >= ?' \
+                ' AND creation_time <= ? AND object_id2 IN (%s)' % ','.join('?' for object_id in objects_ids2)
+            arguments = [object_id1, association_type, low, high] + objects_ids2
+        else:
+            raise ValueError("Either both low and high should be none or nor")
+        q += ' ORDER BY creation_time DESC'
         self.cur.execute(q, arguments)
         keys_values_json = self.cur.fetchall()
         assocs = []
-        print(keys_values_json)
         if keys_values_json is not None:
             index = 0
             for i in keys_values_json:
                 assocs.append(Association(object_id1, association_type, objects_ids2[index], i[0], json.loads(i[1])))
-                #assocs.append(json.loads(i[0]))
+        return assocs
+
+    def count_associations(self, object_id1, association_type):
+        q = 'SELECT COUNT(object_id1) FROM associations WHERE object_id1 = ? AND atype = ?'
+        arguments = [object_id1, association_type]
+        self.cur.execute(q, arguments)
+        keys_values_json = self.cur.fetchall()
+        if keys_values_json is not None:
+            return keys_values_json[0]
+        return 0
+
+    def get_associations_range(self, object_id1, association_type, pos, limit):
+        if pos < 0 or limit < 0:
+            raise ValueError("Both pos and limit have to be negative")
+        q = 'SELECT object_id2, creation_time, keys_values FROM associations WHERE object_id1 = ? AND atype = ?'
+        q += ' ORDER BY creation_time DESC'
+        arguments = [object_id1, association_type]
+        self.cur.execute(q, arguments)
+        keys_values_json = self.cur.fetchall()
+        assocs = []
+        if keys_values_json is not None:
+            for i in keys_values_json:
+                assocs.append(Association(object_id1, association_type, i[0], i[1], json.loads(i[2])))
+            assocs = assocs[pos: pos + limit]
+        return assocs
+
+    def get_associations_time_range(self, object_id1, association_type, low, high, limit):
+        if low < 0 or low > high:
+            raise ValueError("Both low and high have to be positive. Also low must be <= high")
+        q = 'SELECT object_id2, creation_time, keys_values FROM associations WHERE object_id1 = ? AND atype = ? AND creation_time BETWEEN ? AND ?'
+        q += ' ORDER BY creation_time DESC'
+        arguments = [object_id1, association_type, low, high]
+        self.cur.execute(q, arguments)
+        keys_values_json = self.cur.fetchall()
+        assocs = []
+        if keys_values_json is not None:
+            for i in keys_values_json:
+                assocs.append(Association(object_id1, association_type, i[0], i[1], json.loads(i[2])))
+            if limit < len(assocs):
+                return assocs[0: limit]
         return assocs
