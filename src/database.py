@@ -19,21 +19,11 @@ class Database:
         self.cur = self.con.cursor()
         self.cur.execute('DROP TABLE IF EXISTS objects')
         self.cur.execute('DROP TABLE IF EXISTS associations')
-        self.cur.execute('''
-                  CREATE TABLE IF NOT EXISTS objects
-                  (object_id INTEGER PRIMARY KEY ASC,
-                   otype VARCHAR(250) NOT NULL,
-                   keys_values VARCHAR(250) NOT NULL)
-                  ''')
-        self.cur.execute('''
-                  CREATE TABLE IF NOT EXISTS associations
-                  (object_id1 INTEGER NOT NULL,
-                   atype VARCHAR(250) NOT NULL,
-                   object_id2 INTEGER NOT NULL,
-                   creation_time INTEGER NOT NULL,
-                   keys_values VARCHAR(250) NOT NULL,
-                   PRIMARY KEY (object_id1, atype, object_id2));
-                  ''')
+        self.cur.execute('CREATE TABLE IF NOT EXISTS objects (object_id INTEGER PRIMARY KEY ASC, otype VARCHAR(250)'
+                         ' NOT NULL, keys_values VARCHAR(250) NOT NULL)')
+        self.cur.execute('CREATE TABLE IF NOT EXISTS associations (object_id1 INTEGER NOT NULL, atype VARCHAR(250)'
+                         ' NOT NULL, object_id2 INTEGER NOT NULL, creation_time INTEGER NOT NULL, keys_values '
+                         'VARCHAR(250) NOT NULL, PRIMARY KEY (object_id1, atype, object_id2));')
         self.con.commit()
 
     # Helper methods
@@ -166,7 +156,8 @@ class Database:
     def get_associations_time_range(self, object_id1, association_type, low, high, limit):
         if low < 0 or low > high:
             raise ValueError("Both low and high have to be positive. Also low must be <= high")
-        q = 'SELECT object_id2, creation_time, keys_values FROM associations WHERE object_id1 = ? AND atype = ? AND creation_time BETWEEN ? AND ?'
+        q = 'SELECT object_id2, creation_time, keys_values FROM associations WHERE object_id1 = ? AND atype = ? AND' \
+            ' creation_time BETWEEN ? AND ?'
         q += ' ORDER BY creation_time DESC'
         arguments = [object_id1, association_type, low, high]
         self.cur.execute(q, arguments)

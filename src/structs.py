@@ -27,7 +27,7 @@ class Object:
         self.keys_values = keys_values
 
     def __str__(self):
-        return "OBJECT [ID]: " + str(self.object_id) + " [TYPE]: " + str(self.otype) + " [KEYS-VALUES]: " + str(self.keys_values)
+        return "{LOG} OBJECT [ID]: " + str(self.object_id) + " [TYPE]: " + str(self.otype) + " [KEYS-VALUES]: " + str(self.keys_values)
 
     def get_id(self):
         return self.object_id
@@ -42,7 +42,7 @@ class Association:
         self.keys_values = keys_values
 
     def __str__(self):
-        return "ASSOCIATION [ID1]: " + str(self.object_id1) + " [TYPE]: " + str(self.atype) + " [ID2]: " +\
+        return "{LOG} ASSOCIATION [ID1]: " + str(self.object_id1) + " [TYPE]: " + str(self.atype) + " [ID2]: " +\
                str(self.object_id2) + " [TIME]: " + str(self.creation_time) + " [KEYS-VALUES]: " + str(self.keys_values)
 
 
