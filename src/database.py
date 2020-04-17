@@ -67,8 +67,8 @@ class Database:
                          [obj.object_id, obj.otype, keys_values_json])
         self.con.commit()
 
-    def delete_object(self, obj):
-        self.cur.execute("DELETE FROM objects WHERE object_id = ?", [obj.object_id])
+    def delete_object(self, object_id):
+        self.cur.execute("DELETE FROM objects WHERE object_id = ?", [object_id])
         self.con.commit()
 
     def add_association(self, asoc):
@@ -95,7 +95,7 @@ class Database:
             "INSERT INTO associations (object_id1, atype, object_id2, creation_time, keys_values) VALUES (?, ?, ?, ?, ?)",
             [object_id2, atype, object_id1, asoc.creation_time, keys_values_json])
         self.con.commit()
-
+    # MAYBE ADD DELETE INV?
     def delete_association(self, object_id1, association_type, object_id2):
         self.cur.execute("DELETE FROM associations WHERE object_id1 = ? AND atype = ? AND object_id2 = ?",
                          [object_id1, association_type, object_id2])

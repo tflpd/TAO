@@ -1,3 +1,6 @@
+from src.flags import VERBOSE_FLAG
+
+
 # QNode -> holds key and value; as well as pointers to previous and next nodes.
 class QNode(object):
     def __init__(self, key, value):
@@ -7,7 +10,18 @@ class QNode(object):
         self.next = None
 
     def __str__(self):
-        return "(%s, %s)" % (self.key, self.value)
+        if VERBOSE_FLAG:
+            return "(%s, %s)" % (self.key, self.value)
+        else:
+            return str(self.key)
+
+
+class LList(object):
+    def __init__(self, capacity):
+        self.head = None
+        self.end = None
+        self.capacity = capacity
+        self.current_size = 0
 
 
 class LRUCache(object):
@@ -19,15 +33,11 @@ class LRUCache(object):
             raise ValueError("capacity > 0")
         self.hash_map = {}
 
-        self.head = None
-        self.end = None
-
-        self.capacity = capacity
-        self.current_size = 0
+        self.LList = LList(capacity)
 
     # PUBLIC
 
-    def get(self, key):
+    def get_element(self, key):
 
         #:rtype: int
 
@@ -37,7 +47,7 @@ class LRUCache(object):
         node = self.hash_map[key]
 
         # small optimization (1): just return the value if we are already looking at head
-        if self.head == node:
+        if self.LList.head == node:
             return node.value
         self.remove(node)
         self.set_head(node)
@@ -54,31 +64,31 @@ class LRUCache(object):
             node.value = value
 
             # small optimization (2): update pointers only if this is not head; otherwise return
-            if self.head != node:
+            if self.LList.head != node:
                 self.remove(node)
                 self.set_head(node)
         else:
             new_node = QNode(key, value)
-            if self.current_size == self.capacity:
-                del self.hash_map[self.end.key]
-                self.remove(self.end)
+            if self.LList.current_size == self.LList.capacity:
+                del self.hash_map[self.LList.end.key]
+                self.remove(self.LList.end)
             self.set_head(new_node)
             self.hash_map[key] = new_node
 
     # PRIVATE
 
     def set_head(self, node):
-        if not self.head:
-            self.head = node
-            self.end = node
+        if not self.LList.head:
+            self.LList.head = node
+            self.LList.end = node
         else:
-            node.prev = self.head
-            self.head.next = node
-            self.head = node
-        self.current_size += 1
+            node.prev = self.LList.head
+            self.LList.head.next = node
+            self.LList.head = node
+        self.LList.current_size += 1
 
     def remove(self, node):
-        if not self.head:
+        if not self.LList.head:
             return
 
         # removing the node from somewhere in the middle; update pointers
@@ -89,20 +99,20 @@ class LRUCache(object):
 
         # head = end = node
         if not node.next and not node.prev:
-            self.head = None
-            self.end = None
+            self.LList.head = None
+            self.LList.end = None
 
         # if the node we are removing is the one at the end, update the new end
         # also not completely necessary but set the new end's previous to be NULL
-        if self.end == node:
-            self.end = node.next
-            self.end.prev = None
-        self.current_size -= 1
+        if self.LList.end == node:
+            self.LList.end = node.next
+            self.LList.end.prev = None
+        self.LList.current_size -= 1
         return node
 
     def print_elements(self):
-        n = self.head
-        print("[head = %s, end = %s]" % (self.head, self.end), end=" ")
+        n = self.LList.head
+        print("[head = %s, end = %s]  LIST: " % (self.LList.head, self.LList.end), end=" ")
         while n:
             print("%s -> " % (n), end="")
             n = n.prev

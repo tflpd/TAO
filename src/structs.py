@@ -1,8 +1,9 @@
+from src.flags import VERBOSE_FLAG
+
 OBJECTS_TYPES = {"user", "post", "comment", "location", "checkin", "page"}
 
 ASSOCIATION_TYPES = {"liked", "tagged_at", "authored", "friend", "checked_in", "has_comment"}
 INV_ASSOCIATION_TYPES = {"liked_by", "tagged", "authored_by", "friend", "locationed"}
-
 
 ##
 # How to read the above:
@@ -27,7 +28,10 @@ class Object:
         self.keys_values = keys_values
 
     def __str__(self):
-        return "{LOG} OBJECT [ID]: " + str(self.object_id) + " [TYPE]: " + str(self.otype) + " [KEYS-VALUES]: " + str(self.keys_values)
+        if VERBOSE_FLAG:
+            return "{LOG} OBJECT [ID]: " + str(self.object_id) + " [TYPE]: " + str(self.otype) + " [KEYS-VALUES]: " + str(self.keys_values)
+        else:
+            return "{LOG} OBJECT [ID]: " + str(self.object_id)
 
     def get_id(self):
         return self.object_id
@@ -42,8 +46,19 @@ class Association:
         self.keys_values = keys_values
 
     def __str__(self):
-        return "{LOG} ASSOCIATION [ID1]: " + str(self.object_id1) + " [TYPE]: " + str(self.atype) + " [ID2]: " +\
+        if VERBOSE_FLAG:
+            return "{LOG} ASSOCIATION [ID1]: " + str(self.object_id1) + " [TYPE]: " + str(self.atype) + " [ID2]: " +\
                str(self.object_id2) + " [TIME]: " + str(self.creation_time) + " [KEYS-VALUES]: " + str(self.keys_values)
+        else:
+            return "{LOG} ASSOCIATION [ID1]: " + str(self.object_id1) + " [TYPE]: " + str(self.atype) + " [ID2]: " + \
+                   str(self.object_id2)
+
+    def __eq__(self, other):
+        if not isinstance(other, Association):
+            # don't attempt to compare against unrelated types
+            return NotImplemented
+
+        return self.object_id1 == other.object_id1 and self.atype == other.atype and self.object_id2 == other.object_id2
 
 
 class AssociationType:
