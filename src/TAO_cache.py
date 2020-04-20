@@ -67,8 +67,6 @@ class TAONode:
                 self.assoc_lists_cache.set(key, [new_assoc])
                 assoc_counter = 1
             else:
-                # print(cached_assocs_list)
-                # print(assocs_to_str(cached_assocs_list))
                 cached_assocs_list.append(new_assoc)
                 cached_assocs_list.sort(key=lambda x: x.creation_time, reverse=True)
                 self.assoc_lists_cache.set(key, cached_assocs_list)
@@ -92,6 +90,7 @@ class TAONode:
         # Retrieve the ones that exist already in cache (if any)
         # Iterate through the ones in cache
         if cached_assocs != -1:
+            print(key_found_in_cache(key))
             for assoc in cached_assocs:
                 # If any of them is in the requested set of id2s
                 if assoc.object_id2 in id2set:
@@ -151,3 +150,6 @@ class TAONode:
 
     def assoc_time_range(self, id1, atype, low, high, limit):
         return self.database.get_associations_time_range(id1, atype, low, high, limit)
+
+    def assoc_del(self, id1, atype, id2):
+        self.database.delete_association(id1, atype, id2)

@@ -95,7 +95,7 @@ class Database:
             "INSERT INTO associations (object_id1, atype, object_id2, creation_time, keys_values) VALUES (?, ?, ?, ?, ?)",
             [object_id2, atype, object_id1, asoc.creation_time, keys_values_json])
         self.con.commit()
-    # MAYBE ADD DELETE INV?
+    # TODO: Possible optimization; add inverse delete
     def delete_association(self, object_id1, association_type, object_id2):
         self.cur.execute("DELETE FROM associations WHERE object_id1 = ? AND atype = ? AND object_id2 = ?",
                          [object_id1, association_type, object_id2])

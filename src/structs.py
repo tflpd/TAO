@@ -1,3 +1,5 @@
+import random
+
 from src.flags import VERBOSE_FLAG
 
 OBJECTS_TYPES = {"user", "post", "comment", "location", "checkin", "page"}
@@ -74,6 +76,24 @@ class AssociationType:
     has_comment = "has_comment"  # Note this type doesn't have an inverse
 
 
+def get_random_assoc_type():
+    assoc_probability = random.random()
+    if assoc_probability < 0.14:
+        return AssociationType.liked
+    elif assoc_probability < 0.28:
+        return AssociationType.tagged_at
+    elif assoc_probability < 0.42:
+        return AssociationType.authored
+    elif assoc_probability < 0.56:
+        return AssociationType.friend
+    elif assoc_probability < 0.70:
+        return AssociationType.checked_in
+    elif assoc_probability < 0.84:
+        return AssociationType.poked
+    else:
+        return AssociationType.has_comment
+
+
 class InverseAssociationType:
     liked_by = "liked_by"
     tagged = "tagged"
@@ -109,19 +129,34 @@ class ObjectType:
     page = "page"
 
 
+def get_random_object_type():
+    obj_probability = random.random()
+    if obj_probability < 0.16:
+        return ObjectType.user
+    elif obj_probability < 0.32:
+        return ObjectType.post
+    elif obj_probability < 0.48:
+        return ObjectType.page
+    elif obj_probability < 0.64:
+        return ObjectType.location
+    elif obj_probability < 0.80:
+        return ObjectType.checkin
+    else:
+        return ObjectType.comment
+
+
 def key_found_in_cache(key):
     # If it is a key of an Object
     if type(key) is int:
         if VERBOSE_FLAG:
             return "{LOG} OBJECT [ID]: " + str(key) + " was found in cache"
     # If it is a key of an Association
-    elif len(key) == 3:
+    elif len(key) == 2:
         if VERBOSE_FLAG:
-            return "{LOG} ASSOCIATION [ID1]: " + str(key[0]) + " [TYPE]: " + str(key[1]) + " [ID2]: " + str(key[2]) + \
-                   " was found in cache"
+            return "{LOG} ASSOCIATION [ID1]: " + str(key[0]) + " [TYPE]: " + str(key[1]) + " was found in cache"
     else:
         if VERBOSE_FLAG:
-            return "{MSG} KEY: " + key + " has an unexpected amount of arguments"
+            return "{MSG} KEY: " + str(key) + " has an unexpected amount of arguments"
 
 
 def key_found_in_storage(key):
@@ -130,10 +165,9 @@ def key_found_in_storage(key):
         if VERBOSE_FLAG:
             return "{LOG} OBJECT [ID]: " + str(key) + " was found in storage"
     # If it is a key of an Association
-    elif len(key) == 3:
+    elif len(key) == 2:
         if VERBOSE_FLAG:
-            return "{LOG} ASSOCIATION [ID1]: " + str(key[0]) + " [TYPE]: " + str(key[1]) + " [ID2]: " + str(key[2]) + \
-                   " was found in storage"
+            return "{LOG} ASSOCIATION [ID1]: " + str(key[0]) + " [TYPE]: " + str(key[1]) + " was found in storage"
     else:
         if VERBOSE_FLAG:
             return "{MSG} KEY: " + key + " has an unexpected amount of arguments"

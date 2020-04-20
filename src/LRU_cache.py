@@ -121,16 +121,18 @@ class LRUCache(object):
         return node
 
     def print_objects(self):
+        print("{LOG} Printing LRU's objects...")
         n = self.LList.head
         #print("[head = %s, end = %s]  LIST: " % (self.LList.head, self.LList.end), end=" ")
-        print("[head = " + str(self.LList.head) + ", end = " + str(self.LList.end) + "]  LIST: ", end=" ")
+        print("[head = " + str(self.LList.head) + ", end = " + str(self.LList.end) + "]  LIST:\n", end=" ")
         while n:
             #print("%s -> " % (n), end="")
-            print("%s -> " % (n.value), end="")
+            print("%s ->\n" % (n.value), end="")
             n = n.prev
         print("NULL")
 
     def print_assocs(self):
+        print("{LOG} Printing LRU's associations...")
         tmp_node = self.LList.head
         string1 = assocs_to_str(assocs=self.LList.head.value)
         string2 = assocs_to_str(assocs=self.LList.end.value)

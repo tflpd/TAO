@@ -1,3 +1,4 @@
 DEBUG_FLAG = True
 VERBOSE_FLAG = True
+NUM_OPS = 10
 
