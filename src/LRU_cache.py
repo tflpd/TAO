@@ -82,9 +82,14 @@ class LRUCache(object):
             self.LList.head = node
             self.LList.end = node
         else:
+            # # TODO: Check whether the alternative suggested solution is correct
             node.prev = self.LList.head
             self.LList.head.next = node
             self.LList.head = node
+            # node.prev = None
+            # node.next = self.LList.head
+            # self.LList.head.prev = node
+            # self.LList.head = node
         self.LList.current_size += 1
 
     def remove(self, node):
@@ -107,6 +112,9 @@ class LRUCache(object):
         if self.LList.end == node:
             self.LList.end = node.next
             self.LList.end.prev = None
+            # self.LList.end = node.prev
+            # node.prev = None
+            # node.next = None
         self.LList.current_size -= 1
         return node
 

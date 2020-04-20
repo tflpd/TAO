@@ -95,3 +95,12 @@ def invert_assoc(association_type):
         return InverseAssociationType.poked_by
     if association_type == AssociationType.has_comment:  # Note this type doesn't have an inverse
         return AssociationType.has_comment
+
+
+class ObjectType:
+    user = "user"
+    post = "post"
+    comment = "comment"
+    location = "location"
+    checkin = "checkin"
+    page = "page"

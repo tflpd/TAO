@@ -1,4 +1,3 @@
-from src.database import Database
 from src.structs import Object, Association
 from src.LRU_cache import LRUCache
 from src.flags import DEBUG_FLAG
@@ -48,27 +47,46 @@ class TAONode:
     # we prefer to leave the cached object in the cached until it is eventually
     # kicked out than to look it up and delete it, so we just delete from the
     # storage
+    # TODO: Should this cascadeto assocs?
     def obj_delete(self, object_id):
         self.database.delete_object(object_id)
 
     def assoc_add(self, object_id1, association_type, object_id2, creation_time, keys_values):
-        try:
-            new_assoc = Association(object_id1, association_type, object_id2, creation_time, keys_values)
-            self.database.add_association(new_assoc)
-            key = (object_id1, association_type)
-            cached_assocs_list = self.assoc_lists_cache.get_element(key)
-            if cached_assocs_list == -1:
-                self.assoc_lists_cache.set(key, [new_assoc])
-            else:
-                cached_assocs_list.append(new_assoc)
-                self.assoc_lists_cache.set(key, cached_assocs_list)
-        except:
-            if DEBUG_FLAG:
-                print("{MSG} ASSOCIATION [ID1]: " + str(object_id1) + " [TYPE]: " + str(association_type) +
-                      " [ID2]: " + str(object_id2) + " creation failed. Probably this key exists already, "
-                                                     "consider using assoc_delete first")
-
-
+        new_assoc = Association(object_id1, association_type, object_id2, creation_time, keys_values)
+        self.database.add_association(new_assoc)
+        key = (object_id1, association_type)
+        cached_assocs_list = self.assoc_lists_cache.get_element(key)
+        if cached_assocs_list == -1:
+            self.assoc_lists_cache.set(key, [new_assoc])
+            assoc_counter = 1
+        else:
+            cached_assocs_list.append(new_assoc)
+            cached_assocs_list.sort(key=lambda x: x.creation_time, reverse=True)
+            self.assoc_lists_cache.set(key, cached_assocs_list)
+            assoc_counter = len(cached_assocs_list)
+        # Following TAO's details the counts caches understand the semantics of their contents
+        # and for that reason they should be be in coordination with the actual assoc list
+        self.assoc_counts_cache.set(key, assoc_counter)
+        # try:
+        #     new_assoc = Association(object_id1, association_type, object_id2, creation_time, keys_values)
+        #     self.database.add_association(new_assoc)
+        #     key = (object_id1, association_type)
+        #     cached_assocs_list = self.assoc_lists_cache.get_element(key)
+        #     if cached_assocs_list == -1:
+        #         self.assoc_lists_cache.set(key, [new_assoc])
+        #     else:
+        #         cached_assocs_list.append(new_assoc)
+        #         cached_assocs_list.sort(key=lambda x: x.creation_time, reverse=True)
+        #         self.assoc_lists_cache.set(key, cached_assocs_list)
+        #     # Following TAO's details the counts caches understand the semantics of their contents
+        #     # and for that reason they should be be in coordination with the actual assoc list
+        #     assoc_counter = len(cached_assocs_list)
+        #     self.assoc_counts_cache.set(key, assoc_counter)
+        # except:
+        #     if DEBUG_FLAG:
+        #         print("{MSG} ASSOCIATION [ID1]: " + str(object_id1) + " [TYPE]: " + str(association_type) +
+        #               " [ID2]: " + str(object_id2) + " creation failed. Probably this key exists already, "
+        #                                              "consider using assoc_delete first")
 
     def assoc_get(self, id1, atype, id2set, low=None, high=None):
         ret_assocs = []
@@ -106,6 +124,11 @@ class TAONode:
         ret_assocs.sort(key=lambda x: x.creation_time, reverse=True)
         # Add it to cache
         self.assoc_lists_cache.set(key, ret_assocs)
+        # Following TAO's details the counts caches understand the semantics of their contents
+        # and for that reason they should be be in coordination with the actual assoc list
+        if ret_assocs:
+            assoc_counter = len(ret_assocs)
+            self.assoc_counts_cache.set(key, assoc_counter)
         if DEBUG_FLAG and not ret_assocs:
             print("{MSG} QUERY assoc_get WITH ARGS: " + str(id1) + " " + atype + " " + id2set + " " + low + " " + high
                   + " RETURNED EMPTY")
@@ -114,6 +137,22 @@ class TAONode:
     def assoc_count(self, id1, atype):
         key = (id1, atype)
         count = self.assoc_counts_cache.get_element(key)
-        if count != -1:
-            return count
-        return self.database.count_associations(id1, atype)
+        if count == -1:
+            count = self.database.count_associations(id1, atype)
+            self.assoc_counts_cache.set(key, count)
+        return count
+
+    def assoc_range(self, id1, atype, pos, limit):
+        key = (id1, atype)
+        # The following is not part of the paper and it is an optimization
+        # In order to quickly find whether we can answer the query on the [pos, pos+limit) domain
+        # we firstly try to see whether we have enough associations stored in memory so we can avoid
+        # visiting the storage
+        assoc_counter = self.assoc_counts_cache.get_element(key)
+        if assoc_counter != -1 and assoc_counter >= pos + limit:
+            ret_assocs = self.assoc_lists_cache.get_element(key)
+            return ret_assocs[pos, pos + limit]
+        return self.database.get_associations_range(id, atype, pos, limit)
+
+    def assoc_time_range(self, id1, atype, low, high, limit):
+        return self.database.get_associations_time_range(id1, atype, low, high, limit)
