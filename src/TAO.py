@@ -2,7 +2,7 @@ from src.TAO_cache import TAONode
 from src.database import Database
 from src.structs import Object, Association
 from src.LRU_cache import LRUCache
-from src.structs import AssociationType, ObjectType
+from src.structs import AssociationType, ObjectType, InverseAssociationType
 
 OBJECTS_TYPES = {"user", "post", "comment", "location", "checkin", "page"}
 
@@ -83,7 +83,7 @@ def main():
 
     # TAO node testing
     tao = TAONode(objects_cache_size=1, associations_lists_cache_size=1, associations_counts_cache_size=1, db=db)
-    # Create the objects and the associations
+    # Create the objects and the associations and add them in the DB/Cache
     obj1 = Object(object_id=105, object_type=ObjectType.user, keys_values={'name': 'Alice'})
     tao.obj_add(object_id=105, object_type=ObjectType.user, keys_values={'name': 'Alice'})
 
@@ -190,7 +190,27 @@ def main():
                   creation_time=11,
                   keys_values={"time": "1334511670"})
 
-    # Save them in the database
+    # Test whether the above functions work as expected
+    # obj = tao.obj_get(632)
+    # if obj is not None:
+    #     print(obj)
+    # obj = tao.obj_get(632)
+    # if obj is not None:
+    #     print(obj)
+    # obj = tao.obj_get(632)
+    # if obj is not None:
+    #     print(obj)
+    #tao.assoc_lists_cache.print_assocs()
+    #assocs = tao.assoc_get(obj1.get_id(), AssociationType.friend, [obj2.get_id()])
+    #assocs = tao.assoc_range(obj1.get_id(), AssociationType.friend, 0, 10)
+    # assocs = tao.assoc_time_range(obj1.get_id(), AssociationType.friend, 0, 2, 10)
+    # if assocs is not None:
+    #     for assoc in assocs:
+    #         print(assoc)
+    #assocs_count = tao.assoc_count(obj1.get_id(), AssociationType.friend)
+    assocs_count = db.count_associations(obj6.get_id(), InverseAssociationType.authored_by)
+    print(assocs_count)
+
     db.close()
 
 

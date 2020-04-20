@@ -135,7 +135,7 @@ class Database:
         self.cur.execute(q, arguments)
         keys_values_json = self.cur.fetchall()
         if keys_values_json is not None:
-            return keys_values_json[0]
+            return keys_values_json[0][0]
         return 0
 
     def get_associations_range(self, object_id1, association_type, pos, limit):

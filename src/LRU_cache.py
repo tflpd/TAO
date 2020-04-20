@@ -2,6 +2,9 @@ from src.flags import VERBOSE_FLAG
 
 
 # QNode -> holds key and value; as well as pointers to previous and next nodes.
+from src.structs import Object, assocs_to_str
+
+
 class QNode(object):
     def __init__(self, key, value):
         self.key = key
@@ -58,6 +61,10 @@ class LRUCache(object):
         #:type key: int
         #:type value: int
         #:rtype: nothing
+        # if type(value) is Object:
+        #     print("Tha setarw " + str(value))
+        # else:
+        #     print("Tha setarw me prwto " + str(value[0]))
 
         if key in self.hash_map:
             node = self.hash_map[key]
@@ -82,14 +89,9 @@ class LRUCache(object):
             self.LList.head = node
             self.LList.end = node
         else:
-            # # TODO: Check whether the alternative suggested solution is correct
             node.prev = self.LList.head
             self.LList.head.next = node
             self.LList.head = node
-            # node.prev = None
-            # node.next = self.LList.head
-            # self.LList.head.prev = node
-            # self.LList.head = node
         self.LList.current_size += 1
 
     def remove(self, node):
@@ -118,10 +120,24 @@ class LRUCache(object):
         self.LList.current_size -= 1
         return node
 
-    def print_elements(self):
+    def print_objects(self):
         n = self.LList.head
-        print("[head = %s, end = %s]  LIST: " % (self.LList.head, self.LList.end), end=" ")
+        #print("[head = %s, end = %s]  LIST: " % (self.LList.head, self.LList.end), end=" ")
+        print("[head = " + str(self.LList.head) + ", end = " + str(self.LList.end) + "]  LIST: ", end=" ")
         while n:
-            print("%s -> " % (n), end="")
+            #print("%s -> " % (n), end="")
+            print("%s -> " % (n.value), end="")
             n = n.prev
         print("NULL")
+
+    def print_assocs(self):
+        tmp_node = self.LList.head
+        string1 = assocs_to_str(assocs=self.LList.head.value)
+        string2 = assocs_to_str(assocs=self.LList.end.value)
+        print("[head = " + string1 + ", end = " + string2 + "]  LIST:\n", end=" ")
+        while tmp_node:
+            string3 = assocs_to_str(tmp_node.value)
+            print("%s ->\n" % (string3), end="")
+            tmp_node = tmp_node.prev
+        print("NULL")
+

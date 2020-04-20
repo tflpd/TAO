@@ -5,6 +5,7 @@ OBJECTS_TYPES = {"user", "post", "comment", "location", "checkin", "page"}
 ASSOCIATION_TYPES = {"liked", "tagged_at", "authored", "friend", "checked_in", "has_comment"}
 INV_ASSOCIATION_TYPES = {"liked_by", "tagged", "authored_by", "friend", "locationed"}
 
+
 ##
 # How to read the above:
 # user liked post
@@ -29,7 +30,8 @@ class Object:
 
     def __str__(self):
         if VERBOSE_FLAG:
-            return "{LOG} OBJECT [ID]: " + str(self.object_id) + " [TYPE]: " + str(self.otype) + " [KEYS-VALUES]: " + str(self.keys_values)
+            return "{LOG} OBJECT [ID]: " + str(self.object_id) + " [TYPE]: " + str(
+                self.otype) + " [KEYS-VALUES]: " + str(self.keys_values)
         else:
             return "{LOG} OBJECT [ID]: " + str(self.object_id)
 
@@ -47,8 +49,9 @@ class Association:
 
     def __str__(self):
         if VERBOSE_FLAG:
-            return "{LOG} ASSOCIATION [ID1]: " + str(self.object_id1) + " [TYPE]: " + str(self.atype) + " [ID2]: " +\
-               str(self.object_id2) + " [TIME]: " + str(self.creation_time) + " [KEYS-VALUES]: " + str(self.keys_values)
+            return "{LOG} ASSOCIATION [ID1]: " + str(self.object_id1) + " [TYPE]: " + str(self.atype) + " [ID2]: " + \
+                   str(self.object_id2) + " [TIME]: " + str(self.creation_time) + " [KEYS-VALUES]: " + str(
+                self.keys_values)
         else:
             return "{LOG} ASSOCIATION [ID1]: " + str(self.object_id1) + " [TYPE]: " + str(self.atype) + " [ID2]: " + \
                    str(self.object_id2)
@@ -104,3 +107,44 @@ class ObjectType:
     location = "location"
     checkin = "checkin"
     page = "page"
+
+
+def key_found_in_cache(key):
+    # If it is a key of an Object
+    if type(key) is int:
+        if VERBOSE_FLAG:
+            return "{LOG} OBJECT [ID]: " + str(key) + " was found in cache"
+    # If it is a key of an Association
+    elif len(key) == 3:
+        if VERBOSE_FLAG:
+            return "{LOG} ASSOCIATION [ID1]: " + str(key[0]) + " [TYPE]: " + str(key[1]) + " [ID2]: " + str(key[2]) + \
+                   " was found in cache"
+    else:
+        if VERBOSE_FLAG:
+            return "{MSG} KEY: " + key + " has an unexpected amount of arguments"
+
+
+def key_found_in_storage(key):
+    # If it is a key of an Object
+    if type(key) is int:
+        if VERBOSE_FLAG:
+            return "{LOG} OBJECT [ID]: " + str(key) + " was found in storage"
+    # If it is a key of an Association
+    elif len(key) == 3:
+        if VERBOSE_FLAG:
+            return "{LOG} ASSOCIATION [ID1]: " + str(key[0]) + " [TYPE]: " + str(key[1]) + " [ID2]: " + str(key[2]) + \
+                   " was found in storage"
+    else:
+        if VERBOSE_FLAG:
+            return "{MSG} KEY: " + key + " has an unexpected amount of arguments"
+
+
+def assocs_to_str(assocs):
+    try:
+        string = ""
+        for assoc in assocs:
+            string += " " + str(assoc)
+        return string
+    except:
+        print("Not valid associations list")
+        return "N/A"
