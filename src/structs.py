@@ -148,29 +148,23 @@ def get_random_object_type():
 def key_found_in_cache(key):
     # If it is a key of an Object
     if type(key) is int:
-        if VERBOSE_FLAG:
-            return "{LOG} OBJECT [ID]: " + str(key) + " was found in cache"
+        return "{LOG} OBJECT [ID]: " + str(key) + " was found in cache"
     # If it is a key of an Association
     elif len(key) == 2:
-        if VERBOSE_FLAG:
-            return "{LOG} ASSOCIATION [ID1]: " + str(key[0]) + " [TYPE]: " + str(key[1]) + " was found in cache"
+        return "{LOG} ASSOCIATION [ID1]: " + str(key[0]) + " [TYPE]: " + str(key[1]) + " was found in cache"
     else:
-        if VERBOSE_FLAG:
-            return "{MSG} KEY: " + str(key) + " has an unexpected amount of arguments"
+        return "{MSG} KEY: " + str(key) + " has an unexpected amount of arguments"
 
 
 def key_found_in_storage(key):
     # If it is a key of an Object
     if type(key) is int:
-        if VERBOSE_FLAG:
-            return "{LOG} OBJECT [ID]: " + str(key) + " was found in storage"
+        return "{LOG} OBJECT [ID]: " + str(key) + " was found in storage"
     # If it is a key of an Association
     elif len(key) == 2:
-        if VERBOSE_FLAG:
-            return "{LOG} ASSOCIATION [ID1]: " + str(key[0]) + " [TYPE]: " + str(key[1]) + " was found in storage"
+        return "{LOG} ASSOCIATION [ID1]: " + str(key[0]) + " [TYPE]: " + str(key[1]) + " was found in storage"
     else:
-        if VERBOSE_FLAG:
-            return "{MSG} KEY: " + key + " has an unexpected amount of arguments"
+        return "{MSG} KEY: " + key + " has an unexpected amount of arguments"
 
 
 def assocs_to_str(assocs):

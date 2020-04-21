@@ -1,7 +1,7 @@
 from src.LRU_cache import LRUCache
 from src.TAO_cache import TAONode
 from src.database import Database
-from src.flags import NUM_OPS
+from src.flags import NUM_OPS, DEBUG_FLAG
 from src.structs import Object, Association, ObjectType, AssociationType, InverseAssociationType, get_random_assoc_type, \
     get_random_object_type
 import random
@@ -206,58 +206,90 @@ class PaperExample:
 
 class RandomTestsGenerator:
     def __init__(self):
+        random.seed(1)
         db = Database()
-        tao = TAONode(objects_cache_size=1, associations_lists_cache_size=1, associations_counts_cache_size=1, db=db)
+        tao = TAONode(objects_cache_size=10, associations_lists_cache_size=10, associations_counts_cache_size=10, db=db)
         curr_obj_id = -1
         curr_time = 0
         keys_values = {"dict": "with keys values"}
+        curr_obj_id += 1
+        id1 = curr_obj_id
+        tao.obj_add(id1, get_random_object_type(), keys_values)
+        curr_obj_id += 1
+        id1 = curr_obj_id
+        tao.obj_add(id1, get_random_object_type(), keys_values)
+
         for operation in range(NUM_OPS):
             operation_probability = random.random()
             if operation_probability < 0.90:
+                if DEBUG_FLAG:
+                    print(" About to perform read operation: ", end="")
                 operation_probability = random.random()
                 if operation_probability < 0.409:
-                    id1 = random.randrange(0, curr_obj_id, 1)
+                    id1 = random.randrange(0, curr_obj_id + 1)
+                    if DEBUG_FLAG:
+                        print("assoc_range")
                     tao.assoc_range(id1, get_random_assoc_type(), 0, 10)
                 elif operation_probability < 0.698:
-                    id1 = random.randrange(0, curr_obj_id, 1)
+                    id1 = random.randrange(0, curr_obj_id + 1)
+                    if DEBUG_FLAG:
+                        print("obj_get")
                     tao.obj_get(id1)
                 elif operation_probability < 0.855:
-                    id1 = random.randrange(0, curr_obj_id, 1)
-                    id2 = random.randrange(0, curr_obj_id, 1)
-                    while id1 == id2:
-                        id2 = random.randrange(0, curr_obj_id, 1)
-                    tao.assoc_get(id1, get_random_assoc_type(), id2, 0, curr_time)
+                    id1 = random.randrange(0, curr_obj_id + 1)
+                    existing_ids = list(range(curr_obj_id + 1))
+                    existing_ids.remove(id1)
+                    id2set = random.choices(existing_ids)
+                    if DEBUG_FLAG:
+                        print("assoc_get")
+                    tao.assoc_get(id1, get_random_assoc_type(), id2set, 0, curr_time)
                 elif operation_probability < 0.972:
-                    id1 = random.randrange(0, curr_obj_id, 1)
+                    id1 = random.randrange(0, curr_obj_id + 1)
+                    if DEBUG_FLAG:
+                        print("assoc_count")
                     tao.assoc_count(id1, get_random_assoc_type())
                 else:
-                    id1 = random.randrange(0, curr_obj_id, 1)
+                    id1 = random.randrange(0, curr_obj_id + 1)
+                    if DEBUG_FLAG:
+                        print("assoc_time_range")
                     tao.assoc_time_range(id1, get_random_assoc_type(), 0, curr_time, 10)
             else:
                 operation_probability = random.random()
+                if DEBUG_FLAG:
+                    print(" About to perform write operation: ", end="")
                 if operation_probability < 0.525:
                     creation_time = curr_time
                     curr_time += 1
-                    id1 = random.randrange(0, curr_obj_id, 1)
-                    id2 = random.randrange(0, curr_obj_id, 1)
+                    id1 = random.randrange(0, curr_obj_id + 1)
+                    id2 = random.randrange(0, curr_obj_id + 1)
                     while id1 == id2:
-                        id2 = random.randrange(0, curr_obj_id, 1)
+                        id2 = random.randrange(0, curr_obj_id + 1)
+                    if DEBUG_FLAG:
+                        print("assoc_add")
                     tao.assoc_add(id1, get_random_assoc_type(), id2, creation_time, keys_values)
                 elif operation_probability < 0.732:
-                    id1 = random.randrange(0, curr_obj_id, 1)
+                    id1 = random.randrange(0, curr_obj_id + 1)
+                    if DEBUG_FLAG:
+                        print("obj_update")
                     tao.obj_update(id1, get_random_object_type(), keys_values)
                 elif operation_probability < 0.897:
                     curr_obj_id += 1
                     id1 = curr_obj_id
+                    if DEBUG_FLAG:
+                        print("obj_add")
                     tao.obj_add(id1, get_random_object_type(), keys_values)
                 elif operation_probability < 0.980:
-                    id1 = random.randrange(0, curr_obj_id, 1)
-                    id2 = random.randrange(0, curr_obj_id, 1)
+                    id1 = random.randrange(0, curr_obj_id + 1)
+                    id2 = random.randrange(0, curr_obj_id + 1)
                     while id1 == id2:
-                        id2 = random.randrange(0, curr_obj_id, 1)
+                        id2 = random.randrange(0, curr_obj_id + 1)
+                    if DEBUG_FLAG:
+                        print("assoc_del")
                     tao.assoc_del(id1, get_random_assoc_type(), id2)
                 else:
-                    id1 = random.randrange(0, curr_obj_id, 1)
+                    id1 = random.randrange(0, curr_obj_id + 1)
+                    if DEBUG_FLAG:
+                        print("obj_delete")
                     tao.obj_delete(id1)
 
         db.close()

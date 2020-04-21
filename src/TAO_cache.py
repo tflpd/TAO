@@ -16,7 +16,8 @@ class TAONode:
     def obj_get(self, obj_id):
         obj = self.objects_cache.get_element(obj_id)
         if obj != -1:
-            print(key_found_in_cache(obj_id))
+            if DEBUG_FLAG:
+                print(key_found_in_cache(obj_id))
             return obj
         obj = self.database.retrieve_object(obj_id)
         if obj is None:
@@ -25,7 +26,8 @@ class TAONode:
                 return obj
         else:
             self.objects_cache.set(obj_id, obj)
-            print(key_found_in_storage(obj_id))
+            if DEBUG_FLAG:
+                print(key_found_in_storage(obj_id))
             return obj
 
     def obj_add(self, object_id, object_type, keys_values):
@@ -90,7 +92,8 @@ class TAONode:
         # Retrieve the ones that exist already in cache (if any)
         # Iterate through the ones in cache
         if cached_assocs != -1:
-            print(key_found_in_cache(key))
+            if DEBUG_FLAG:
+                print(key_found_in_cache(key))
             for assoc in cached_assocs:
                 # If any of them is in the requested set of id2s
                 if assoc.object_id2 in id2set:
@@ -124,14 +127,16 @@ class TAONode:
             assoc_counter = len(ret_assocs)
             self.assoc_counts_cache.set(key, assoc_counter)
         if DEBUG_FLAG and not ret_assocs:
-            print("{MSG} QUERY assoc_get WITH ARGS: " + str(id1) + " " + atype + " " + id2set + " " + str(low) + " "
-                  + str(high) + " RETURNED EMPTY")
+            print("{MSG} QUERY assoc_get WITH ARGS: (" + str(id1) + ", " + atype + ", " + str(id2set) + ", " + str(low) + ", "
+                  + str(high) + ") RETURNED EMPTY")
         return ret_assocs
 
     def assoc_count(self, id1, atype):
         key = (id1, atype)
         count = self.assoc_counts_cache.get_element(key)
         if count == -1:
+            if DEBUG_FLAG:
+                print(key_found_in_cache(key))
             count = self.database.count_associations(id1, atype)
             self.assoc_counts_cache.set(key, count)
         return count
@@ -144,6 +149,8 @@ class TAONode:
         # visiting the storage
         assoc_counter = self.assoc_counts_cache.get_element(key)
         if assoc_counter != -1 and assoc_counter >= pos + limit:
+            if DEBUG_FLAG:
+                print(key_found_in_cache(key))
             ret_assocs = self.assoc_lists_cache.get_element(key)
             return ret_assocs[pos, pos + limit]
         return self.database.get_associations_range(id1, atype, pos, limit)

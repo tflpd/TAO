@@ -61,10 +61,6 @@ class LRUCache(object):
         #:type key: int
         #:type value: int
         #:rtype: nothing
-        # if type(value) is Object:
-        #     print("Tha setarw " + str(value))
-        # else:
-        #     print("Tha setarw me prwto " + str(value[0]))
 
         if key in self.hash_map:
             node = self.hash_map[key]
@@ -114,19 +110,14 @@ class LRUCache(object):
         if self.LList.end == node:
             self.LList.end = node.next
             self.LList.end.prev = None
-            # self.LList.end = node.prev
-            # node.prev = None
-            # node.next = None
         self.LList.current_size -= 1
         return node
 
     def print_objects(self):
         print("{LOG} Printing LRU's objects...")
         n = self.LList.head
-        #print("[head = %s, end = %s]  LIST: " % (self.LList.head, self.LList.end), end=" ")
         print("[head = " + str(self.LList.head) + ", end = " + str(self.LList.end) + "]  LIST:\n", end=" ")
         while n:
-            #print("%s -> " % (n), end="")
             print("%s ->\n" % (n.value), end="")
             n = n.prev
         print("NULL")
@@ -136,7 +127,7 @@ class LRUCache(object):
         tmp_node = self.LList.head
         string1 = assocs_to_str(assocs=self.LList.head.value)
         string2 = assocs_to_str(assocs=self.LList.end.value)
-        print("[head = " + string1 + ", end = " + string2 + "]  LIST:\n", end=" ")
+        print("[head = " + string1 + ", end = " + string2 + "]  LIST:\n", end="")
         while tmp_node:
             string3 = assocs_to_str(tmp_node.value)
             print("%s ->\n" % (string3), end="")
