@@ -9,6 +9,7 @@ import random
 
 class UnitTests:
     def __init__(self):
+        print("Started executing unit test...")
         db = Database()
         obj1 = Object(object_id=1, object_type="user", keys_values={'name': 'thanos'})
         obj2 = Object(object_id=2, object_type="user", keys_values={'name': 'anna'})
@@ -65,6 +66,7 @@ class UnitTests:
 
 class PaperExample:
     def __init__(self):
+        print("Started executing paper's example...")
         db = Database()
 
         # TAO node testing
@@ -206,12 +208,19 @@ class PaperExample:
 
 class RandomTestsGenerator:
     def __init__(self):
+        print("Started executing random generated test...")
         random.seed(1)
         db = Database()
-        tao = TAONode(objects_cache_size=10, associations_lists_cache_size=10, associations_counts_cache_size=10, db=db)
+        tao = TAONode(objects_cache_size=1, associations_lists_cache_size=1, associations_counts_cache_size=1, db=db)
         curr_obj_id = -1
         curr_time = 0
         keys_values = {"dict": "with keys values"}
+
+        write_reqs = ["assoc_add", "assoc_del", "obj_add", "obj_update", "obj_delete"]
+        write_reqs_weights = [52.5, 8.3, 16.5, 20.7, 2]
+        read_reqs = ["assoc_get", "assoc_range", "assoc_time_range", "assoc_count", "obj_get"]
+        read_reqs_weights = [15.7, 40.9, 2.8, 11.7, 28.9]
+
         curr_obj_id += 1
         id1 = curr_obj_id
         tao.obj_add(id1, get_random_object_type(), keys_values)
@@ -224,18 +233,18 @@ class RandomTestsGenerator:
             if operation_probability < 0.90:
                 if DEBUG_FLAG:
                     print(" About to perform read operation: ", end="")
-                operation_probability = random.random()
-                if operation_probability < 0.409:
+                op = random.choices(read_reqs, read_reqs_weights)
+                if op[0] == "assoc_range":
                     id1 = random.randrange(0, curr_obj_id + 1)
                     if DEBUG_FLAG:
                         print("assoc_range")
                     tao.assoc_range(id1, get_random_assoc_type(), 0, 10)
-                elif operation_probability < 0.698:
+                elif op[0] == "obj_get":
                     id1 = random.randrange(0, curr_obj_id + 1)
                     if DEBUG_FLAG:
                         print("obj_get")
                     tao.obj_get(id1)
-                elif operation_probability < 0.855:
+                elif op[0] == "assoc_get":
                     id1 = random.randrange(0, curr_obj_id + 1)
                     existing_ids = list(range(curr_obj_id + 1))
                     existing_ids.remove(id1)
@@ -243,7 +252,7 @@ class RandomTestsGenerator:
                     if DEBUG_FLAG:
                         print("assoc_get")
                     tao.assoc_get(id1, get_random_assoc_type(), id2set, 0, curr_time)
-                elif operation_probability < 0.972:
+                elif op[0] == "assoc_count":
                     id1 = random.randrange(0, curr_obj_id + 1)
                     if DEBUG_FLAG:
                         print("assoc_count")
@@ -254,10 +263,10 @@ class RandomTestsGenerator:
                         print("assoc_time_range")
                     tao.assoc_time_range(id1, get_random_assoc_type(), 0, curr_time, 10)
             else:
-                operation_probability = random.random()
+                op = random.choices(write_reqs, write_reqs_weights)
                 if DEBUG_FLAG:
                     print(" About to perform write operation: ", end="")
-                if operation_probability < 0.525:
+                if op[0] == "assoc_add":
                     creation_time = curr_time
                     curr_time += 1
                     id1 = random.randrange(0, curr_obj_id + 1)
@@ -267,18 +276,18 @@ class RandomTestsGenerator:
                     if DEBUG_FLAG:
                         print("assoc_add")
                     tao.assoc_add(id1, get_random_assoc_type(), id2, creation_time, keys_values)
-                elif operation_probability < 0.732:
+                elif op[0] == "obj_update":
                     id1 = random.randrange(0, curr_obj_id + 1)
                     if DEBUG_FLAG:
                         print("obj_update")
                     tao.obj_update(id1, get_random_object_type(), keys_values)
-                elif operation_probability < 0.897:
+                elif op[0] == "obj_add":
                     curr_obj_id += 1
                     id1 = curr_obj_id
                     if DEBUG_FLAG:
                         print("obj_add")
                     tao.obj_add(id1, get_random_object_type(), keys_values)
-                elif operation_probability < 0.980:
+                elif op[0] == "assoc_del":
                     id1 = random.randrange(0, curr_obj_id + 1)
                     id2 = random.randrange(0, curr_obj_id + 1)
                     while id1 == id2:

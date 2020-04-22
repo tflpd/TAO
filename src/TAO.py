@@ -1,3 +1,5 @@
+import time
+
 from src.TAO_cache import TAONode
 from src.database import Database
 from src.structs import Object, Association
@@ -33,7 +35,10 @@ INV_ASSOCIATION_TYPES = {"liked_by", "tagged", "authored_by", "friend", "locatio
 def main():
     #unit_test = UnitTests()
     #paper_example_test = PaperExample()
+    start = time.time()
     random_test = RandomTestsGenerator()
+    end = time.time()
+    print("Duration: " + str(end - start))
 
 
 
