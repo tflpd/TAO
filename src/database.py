@@ -1,7 +1,6 @@
 import sqlite3
 import os
 import json
-from enum import Enum
 
 from src.structs import Object, Association, invert_assoc
 
@@ -45,7 +44,6 @@ class Database:
 
     def create_object(self, obj):
         keys_values_json = json.dumps(obj.keys_values)
-        # self.cur.execute("INSERT OR REPLACE INTO objects (object_id, keys_values) VALUES (?, ?)", [object_id, keys_values_json])
         self.cur.execute("INSERT INTO objects (object_id, otype, keys_values) VALUES (?, ?, ?)",
                          [obj.object_id, obj.otype, keys_values_json])
         self.con.commit()
@@ -55,14 +53,11 @@ class Database:
         self.con.commit()
         keys_values_json = self.cur.fetchone()
         if keys_values_json is not None:
-            # return keys_values_json
-            # return json.loads(keys_values_json[0]), keys_values_json[1]
             return Object(object_id, keys_values_json[0], json.loads(keys_values_json[1]))
         return None
 
     def update_object(self, obj):
         keys_values_json = json.dumps(obj.keys_values)
-        # self.cur.execute("INSERT OR REPLACE INTO objects (object_id, keys_values) VALUES (?, ?)", [object_id, keys_values_json])
         self.cur.execute("INSERT OR REPLACE INTO objects (object_id, otype, keys_values) VALUES (?, ?, ?)",
                          [obj.object_id, obj.otype, keys_values_json])
         self.con.commit()
@@ -75,8 +70,6 @@ class Database:
         object_id1 = asoc.object_id1
         object_id2 = asoc.object_id2
         keys_values_json = json.dumps(asoc.keys_values)
-        # self.cur.execute("INSERT OR REPLACE INTO associations (object_id1, atype, object_id2, creation_time, "
-        #                  "keys_values")
         self.cur.execute(
             "INSERT INTO associations (object_id1, atype, object_id2, creation_time, keys_values) VALUES (?, ?, ?, ?, ?)",
             [object_id1, asoc.atype, object_id2, asoc.creation_time, keys_values_json])
@@ -88,13 +81,11 @@ class Database:
         object_id2 = asoc.object_id2
         keys_values_json = json.dumps(asoc.keys_values)
         atype = invert_assoc(asoc.atype)
-
-        # self.cur.execute("INSERT OR REPLACE INTO associations (object_id1, atype, object_id2, creation_time, "
-        #                  "keys_values")
         self.cur.execute(
             "INSERT INTO associations (object_id1, atype, object_id2, creation_time, keys_values) VALUES (?, ?, ?, ?, ?)",
             [object_id2, atype, object_id1, asoc.creation_time, keys_values_json])
         self.con.commit()
+
     # TODO: Possible optimization; add inverse delete
     def delete_association(self, object_id1, association_type, object_id2):
         self.cur.execute("DELETE FROM associations WHERE object_id1 = ? AND atype = ? AND object_id2 = ?",
@@ -108,8 +99,8 @@ class Database:
 
     def get_associations(self, object_id1, association_type, objects_ids2, low=None, high=None):
         if low is None and high is None:
-            q = 'SELECT creation_time, keys_values FROM associations WHERE object_id1 = ? AND atype = ? AND object_id2 IN (%s)' % ','.join(
-                '?' for object_id in objects_ids2)
+            q = 'SELECT creation_time, keys_values FROM associations WHERE object_id1 = ? AND atype = ? AND ' \
+                'object_id2 IN (%s)' % ','.join('?' for object_id in objects_ids2)
             arguments = [object_id1, association_type] + objects_ids2
         elif low is not None and high is not None:
             if low < 0 or low > high:

@@ -3,7 +3,7 @@ from src.LRU_cache import LRUCache
 from src.flags import DEBUG_FLAG
 
 
-class TAONode:
+class TAONodeCacheServer:
     def __init__(self, objects_cache_size, associations_lists_cache_size, associations_counts_cache_size, db):
         self.obj_size = objects_cache_size
         self.assoc_lists_size = associations_lists_cache_size
@@ -51,8 +51,8 @@ class TAONode:
                       " update failed. This shouldn't have failed, you did sth miserably wrong")
 
     # This assumes that since TAO sacrifices consistency over performance
-    # we prefer to leave the cached object in the cached until it is eventually
-    # kicked out than to look it up and delete it, so we just delete from the
+    # we prefer to leave the cached object in the cache until it is eventually
+    # kicked out than to look it up and delete it, so we just delete it from the
     # storage
     # TODO: Should this cascade to associations? Privacy concern; Is the data of a deleted user kept?
     def obj_delete(self, object_id):
@@ -83,8 +83,19 @@ class TAONode:
                                                      "consider using assoc_delete first")
 
     def assoc_get(self, id1, atype, id2set, low=None, high=None):
-        ret_assocs = []
         key = (id1, atype)
+        # Following TAO's specification, cache servers understand the semantics of their contents and use them to
+        # answer queries even if the exact query has not been previously processed, e.g. a cached count of zero is
+        # sufficient to answer a range query
+        count = self.assoc_counts_cache.get_element(key)
+        # If this count is cached
+        if count != -1:
+            # If its value is zero
+            if count == 0:
+                # Then return that there are no results to fulfill this query
+                return []
+
+        ret_assocs = []
         cached_assocs = self.assoc_lists_cache.get_element(key)
         cached_id2s = []
         not_cached_id2s = []

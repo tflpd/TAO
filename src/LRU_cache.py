@@ -1,11 +1,8 @@
 from src.flags import VERBOSE_FLAG
+from src.structs import assocs_to_str
 
 
-# QNode -> holds key and value; as well as pointers to previous and next nodes.
-from src.structs import Object, assocs_to_str
-
-
-class QNode(object):
+class LRUCacheNode:
     def __init__(self, key, value):
         self.key = key
         self.value = value
@@ -19,7 +16,9 @@ class QNode(object):
             return str(self.key)
 
 
-class LList(object):
+# Note; this is an inversed LinkedList so you may think of the head being the rightmost
+# element instead of the usual leftmost
+class LList:
     def __init__(self, capacity):
         self.head = None
         self.end = None
@@ -27,58 +26,16 @@ class LList(object):
         self.current_size = 0
 
 
-class LRUCache(object):
+# A least recently used policy cache. In this implementation it is used for caching both objects and
+# associations lists by using the respective keys
+class LRUCache:
     def __init__(self, capacity):
-
-        #:type capacity: int
 
         if capacity <= 0:
             raise ValueError("capacity > 0")
         self.hash_map = {}
 
         self.LList = LList(capacity)
-
-    # PUBLIC
-
-    def get_element(self, key):
-
-        #:rtype: int
-
-        if key not in self.hash_map:
-            return -1
-
-        node = self.hash_map[key]
-
-        # small optimization (1): just return the value if we are already looking at head
-        if self.LList.head == node:
-            return node.value
-        self.remove(node)
-        self.set_head(node)
-        return node.value
-
-    def set(self, key, value):
-
-        #:type key: int
-        #:type value: int
-        #:rtype: nothing
-
-        if key in self.hash_map:
-            node = self.hash_map[key]
-            node.value = value
-
-            # small optimization (2): update pointers only if this is not head; otherwise return
-            if self.LList.head != node:
-                self.remove(node)
-                self.set_head(node)
-        else:
-            new_node = QNode(key, value)
-            if self.LList.current_size == self.LList.capacity:
-                del self.hash_map[self.LList.end.key]
-                self.remove(self.LList.end)
-            self.set_head(new_node)
-            self.hash_map[key] = new_node
-
-    # PRIVATE
 
     def set_head(self, node):
         if not self.LList.head:
@@ -94,13 +51,12 @@ class LRUCache(object):
         if not self.LList.head:
             return
 
-        # removing the node from somewhere in the middle; update pointers
         if node.prev:
             node.prev.next = node.next
         if node.next:
             node.next.prev = node.prev
 
-        # head = end = node
+        # if this was the only node
         if not node.next and not node.prev:
             self.LList.head = None
             self.LList.end = None
@@ -118,7 +74,7 @@ class LRUCache(object):
         n = self.LList.head
         print("[head = " + str(self.LList.head) + ", end = " + str(self.LList.end) + "]  LIST:\n", end=" ")
         while n:
-            print("%s ->\n" % (n.value), end="")
+            print("%s ->\n" % n.value, end="")
             n = n.prev
         print("NULL")
 
@@ -130,7 +86,39 @@ class LRUCache(object):
         print("[head = " + string1 + ", end = " + string2 + "]  LIST:\n", end="")
         while tmp_node:
             string3 = assocs_to_str(tmp_node.value)
-            print("%s ->\n" % (string3), end="")
+            print("%s ->\n" % string3, end="")
             tmp_node = tmp_node.prev
         print("NULL")
+
+    def get_element(self, key):
+
+        if key not in self.hash_map:
+            return -1
+
+        node = self.hash_map[key]
+
+        # if this key was already the last accessed no other changes are needed
+        if self.LList.head == node:
+            return node.value
+        self.remove(node)
+        self.set_head(node)
+        return node.value
+
+    def set(self, key, value):
+
+        if key in self.hash_map:
+            node = self.hash_map[key]
+            node.value = value
+
+            # if this key was already the last accessed no other changes are needed
+            if self.LList.head != node:
+                self.remove(node)
+                self.set_head(node)
+        else:
+            new_node = LRUCacheNode(key, value)
+            if self.LList.current_size == self.LList.capacity:
+                del self.hash_map[self.LList.end.key]
+                self.remove(self.LList.end)
+            self.set_head(new_node)
+            self.hash_map[key] = new_node
 

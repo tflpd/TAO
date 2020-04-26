@@ -1,7 +1,8 @@
 from src.LRU_cache import LRUCache
-from src.TAO_cache import TAONode
+from src.TAO_cache import TAONodeCacheServer
 from src.database import Database
-from src.flags import NUM_OPS, DEBUG_FLAG
+from src.flags import NUM_OPS, DEBUG_FLAG, read_reqs_weights, write_reqs_weights, OBJECTS_CACHE_SIZE, \
+    ASSOCIATIONS_CACHE_SIZE, ASSOCIATIONS_COUNTS_CACHE_SIZE, RANDOM
 from src.structs import Object, Association, ObjectType, AssociationType, InverseAssociationType, get_random_assoc_type, \
     get_random_object_type
 import random
@@ -69,8 +70,10 @@ class PaperExample:
         print("Started executing paper's example...")
         db = Database()
 
-        # TAO node testing
-        tao = TAONode(objects_cache_size=1, associations_lists_cache_size=1, associations_counts_cache_size=1, db=db)
+        # TAO node testing based on the example provided by the paper
+
+        tao = TAONodeCacheServer(objects_cache_size=1, associations_lists_cache_size=1, associations_counts_cache_size=1, db=db)
+
         # Create the objects and the associations and add them in the DB/Cache
         obj1 = Object(object_id=105, object_type=ObjectType.user, keys_values={'name': 'Alice'})
         tao.obj_add(object_id=105, object_type=ObjectType.user, keys_values={'name': 'Alice'})
@@ -182,24 +185,42 @@ class PaperExample:
         # The first row has the natural language query
         # The second row has the TAO API translated query
 
+        # Get me the object with id 632 (the comment which is not currently in cache)
         obj = tao.obj_get(632)
         if obj is not None:
             print(obj)
+        # Get me the object with id 632 (the comment which is now in cache)
         obj = tao.obj_get(632)
         if obj is not None:
             print(obj)
+        # Get me the object with id 632 (the comment which is now in cache. to ensure nothing changed)
         obj = tao.obj_get(632)
         if obj is not None:
             print(obj)
-        tao.assoc_lists_cache.print_assocs()
+        # Get me all the friends associations between Alice and Bob
         assocs = tao.assoc_get(obj1.get_id(), AssociationType.friend, [obj2.get_id()])
-        assocs = tao.assoc_get(obj1.get_id(), AssociationType.friend, [obj2.get_id()])
-        assocs = tao.assoc_range(obj1.get_id(), AssociationType.friend, 0, 10)
-        assocs = tao.assoc_time_range(obj1.get_id(), AssociationType.friend, 0, 2, 10)
         if assocs is not None:
             for assoc in assocs:
                 print(assoc)
+        # Get me all the friends associations between Alice and Bob, David
+        assocs = tao.assoc_get(obj1.get_id(), AssociationType.friend, [obj2.get_id(), obj4.get_id()])
+        if assocs is not None:
+            for assoc in assocs:
+                print(assoc)
+        # Get me 10 friends of Alice starting from the latest one (pos=0)
+        assocs = tao.assoc_range(obj1.get_id(), AssociationType.friend, pos=0, limit=10)
+        if assocs is not None:
+            for assoc in assocs:
+                print(assoc)
+        # Get me the 10 latest friends of Alice that have been created between time 0 and time 2
+        assocs = tao.assoc_time_range(obj1.get_id(), AssociationType.friend, low=0, high=2, limit=10)
+        if assocs is not None:
+            for assoc in assocs:
+                print(assoc)
+        # Get me the total number of friends that Alice has
         assocs_count = tao.assoc_count(obj1.get_id(), AssociationType.friend)
+        print(assocs_count)
+        # Get me the total number of people the checkin object sees as its authors
         assocs_count = db.count_associations(obj6.get_id(), InverseAssociationType.authored_by)
         print(assocs_count)
 
@@ -209,36 +230,47 @@ class PaperExample:
 class RandomTestsGenerator:
     def __init__(self):
         print("Started executing random generated test...")
-        random.seed(1)
+        if not RANDOM:
+            random.seed(1)
         db = Database()
-        tao = TAONode(objects_cache_size=1, associations_lists_cache_size=1, associations_counts_cache_size=1, db=db)
+        # Initialize TAO cache
+        tao = TAONodeCacheServer(objects_cache_size=OBJECTS_CACHE_SIZE,
+                                 associations_lists_cache_size=ASSOCIATIONS_CACHE_SIZE,
+                                 associations_counts_cache_size=ASSOCIATIONS_COUNTS_CACHE_SIZE, db=db)
         curr_obj_id = -1
+        # Time is counted as logical time. Every time a new write transaction enters the system
+        # time is increased by one
         curr_time = 0
         keys_values = {"dict": "with keys values"}
 
         write_reqs = ["assoc_add", "assoc_del", "obj_add", "obj_update", "obj_delete"]
-        write_reqs_weights = [52.5, 8.3, 16.5, 20.7, 2]
         read_reqs = ["assoc_get", "assoc_range", "assoc_time_range", "assoc_count", "obj_get"]
-        read_reqs_weights = [15.7, 40.9, 2.8, 11.7, 28.9]
-
+        # Create two dummy objects to ensure that an association can be created if needed
         curr_obj_id += 1
         id1 = curr_obj_id
         tao.obj_add(id1, get_random_object_type(), keys_values)
         curr_obj_id += 1
         id1 = curr_obj_id
         tao.obj_add(id1, get_random_object_type(), keys_values)
-
+        # Execute NUM_OPS operations
         for operation in range(NUM_OPS):
             operation_probability = random.random()
+            # The probability of an operation being read is currently fixed in 90%
             if operation_probability < 0.90:
                 if DEBUG_FLAG:
                     print(" About to perform read operation: ", end="")
+                # Choose which one of the read operation will be performed based on the provided weights
+                # Every time, the id(s) needed for the specific operation will be chosen
+                # at random from the existing ones
                 op = random.choices(read_reqs, read_reqs_weights)
                 if op[0] == "assoc_range":
                     id1 = random.randrange(0, curr_obj_id + 1)
                     if DEBUG_FLAG:
                         print("assoc_range")
-                    tao.assoc_range(id1, get_random_assoc_type(), 0, 10)
+                    # When reading and associations range the fixed offset at which the query starts is the start of
+                    # the association list and the limit of how many associations will be created is
+                    # currently set equal to 10
+                    tao.assoc_range(id1, get_random_assoc_type(), pos=0, limit=10)
                 elif op[0] == "obj_get":
                     id1 = random.randrange(0, curr_obj_id + 1)
                     if DEBUG_FLAG:
@@ -246,12 +278,19 @@ class RandomTestsGenerator:
                     tao.obj_get(id1)
                 elif op[0] == "assoc_get":
                     id1 = random.randrange(0, curr_obj_id + 1)
+                    # Here we create a random subset of the existing objects with fixed selectivity equal to 1%
                     existing_ids = list(range(curr_obj_id + 1))
                     existing_ids.remove(id1)
-                    id2set = random.choices(existing_ids)
+                    k = curr_obj_id // 100
+                    if k == 0:
+                        k = 1
+                    id2set = random.choices(existing_ids, k=k)
                     if DEBUG_FLAG:
                         print("assoc_get")
-                    tao.assoc_get(id1, get_random_assoc_type(), id2set, 0, curr_time)
+                    # Then the query asks TAO for a random association type between the chosen id1 and the random
+                    # subset we created. The time filter is currently fixed to start from the time zero until the
+                    # logical time now (curr_time)
+                    tao.assoc_get(id1, get_random_assoc_type(), id2set, low=0, high=curr_time)
                 elif op[0] == "assoc_count":
                     id1 = random.randrange(0, curr_obj_id + 1)
                     if DEBUG_FLAG:
@@ -261,14 +300,20 @@ class RandomTestsGenerator:
                     id1 = random.randrange(0, curr_obj_id + 1)
                     if DEBUG_FLAG:
                         print("assoc_time_range")
-                    tao.assoc_time_range(id1, get_random_assoc_type(), 0, curr_time, 10)
+                    # When asking tao an association time range query this is currently fixed to start searching from
+                    # time zero until the current time and will return based on a limit of the latest 10 associations
+                    tao.assoc_time_range(id1, get_random_assoc_type(), low=0, high=curr_time, limit=10)
             else:
+                # Choose which one of the write operation will be performed based on the provided weights
+                # Every time, the id(s) needed for the specific operation will be chosen
+                # at random from the existing ones
                 op = random.choices(write_reqs, write_reqs_weights)
                 if DEBUG_FLAG:
                     print(" About to perform write operation: ", end="")
                 if op[0] == "assoc_add":
                     creation_time = curr_time
                     curr_time += 1
+                    # Choose randomly two objects and create a random association between them
                     id1 = random.randrange(0, curr_obj_id + 1)
                     id2 = random.randrange(0, curr_obj_id + 1)
                     while id1 == id2:

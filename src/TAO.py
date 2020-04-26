@@ -1,10 +1,4 @@
 import time
-
-from src.TAO_cache import TAONode
-from src.database import Database
-from src.structs import Object, Association
-from src.LRU_cache import LRUCache
-from src.structs import AssociationType, ObjectType, InverseAssociationType
 from src.tests import UnitTests, PaperExample, RandomTestsGenerator
 
 OBJECTS_TYPES = {"user", "post", "comment", "location", "checkin", "page"}
@@ -28,18 +22,15 @@ INV_ASSOCIATION_TYPES = {"liked_by", "tagged", "authored_by", "friend", "locatio
 #
 # etc
 #
-# start = time.time()
-# print(f’Duration: {time.time() — start}s’)
 ##
 
 def main():
-    #unit_test = UnitTests()
-    #paper_example_test = PaperExample()
     start = time.time()
+    # unit_test = UnitTests()
+    # paper_example_test = PaperExample()
     random_test = RandomTestsGenerator()
     end = time.time()
-    print("Duration: " + str(end - start))
-
+    print("Execution time: " + str(end - start))
 
 
 if __name__ == "__main__":
