@@ -16,13 +16,13 @@ class Database:
     def __init__(self):
         self.con = sqlite3.connect(DEFAULT_PATH)
         self.cur = self.con.cursor()
-        self.cur.execute('DROP TABLE IF EXISTS objects')
-        self.cur.execute('DROP TABLE IF EXISTS associations')
-        self.cur.execute('CREATE TABLE IF NOT EXISTS objects (object_id INTEGER PRIMARY KEY ASC, otype VARCHAR(250)'
-                         ' NOT NULL, keys_values VARCHAR(250) NOT NULL)')
-        self.cur.execute('CREATE TABLE IF NOT EXISTS associations (object_id1 INTEGER NOT NULL, atype VARCHAR(250)'
-                         ' NOT NULL, object_id2 INTEGER NOT NULL, creation_time INTEGER NOT NULL, keys_values '
-                         'VARCHAR(250) NOT NULL, PRIMARY KEY (object_id1, atype, object_id2));')
+        self.cur.execute("DROP TABLE IF EXISTS objects")
+        self.cur.execute("DROP TABLE IF EXISTS associations")
+        self.cur.execute("CREATE TABLE IF NOT EXISTS objects (object_id INTEGER PRIMARY KEY ASC, otype VARCHAR(250)"
+                         " NOT NULL, keys_values VARCHAR(250) NOT NULL)")
+        self.cur.execute("CREATE TABLE IF NOT EXISTS associations (object_id1 INTEGER NOT NULL, atype VARCHAR(250)"
+                         " NOT NULL, object_id2 INTEGER NOT NULL, creation_time INTEGER NOT NULL, keys_values "
+                         "VARCHAR(250) NOT NULL, PRIMARY KEY (object_id1, atype, object_id2));")
         self.con.commit()
 
     # Helper methods
@@ -31,7 +31,7 @@ class Database:
         self.con.close()
 
     def get_all_associations(self):
-        q = 'SELECT * FROM associations'
+        q = "SELECT * FROM associations"
         self.cur.execute(q)
         keys_values_json = self.cur.fetchall()
         assocs = []
@@ -99,8 +99,8 @@ class Database:
 
     def get_associations(self, object_id1, association_type, objects_ids2, low=None, high=None):
         if low is None and high is None:
-            q = 'SELECT creation_time, keys_values FROM associations WHERE object_id1 = ? AND atype = ? AND ' \
-                'object_id2 IN (%s)' % ','.join('?' for object_id in objects_ids2)
+            q = "SELECT creation_time, keys_values FROM associations WHERE object_id1 = ? AND atype = ? AND " \
+                "object_id2 IN (%s)" % ','.join('?' for object_id in objects_ids2)
             arguments = [object_id1, association_type] + objects_ids2
         elif low is not None and high is not None:
             if low < 0 or low > high:
@@ -121,7 +121,7 @@ class Database:
         return assocs
 
     def count_associations(self, object_id1, association_type):
-        q = 'SELECT COUNT(object_id1) FROM associations WHERE object_id1 = ? AND atype = ?'
+        q = "SELECT COUNT(object_id1) FROM associations WHERE object_id1 = ? AND atype = ?"
         arguments = [object_id1, association_type]
         self.cur.execute(q, arguments)
         keys_values_json = self.cur.fetchall()
@@ -132,8 +132,8 @@ class Database:
     def get_associations_range(self, object_id1, association_type, pos, limit):
         if pos < 0 or limit < 0:
             raise ValueError("Both pos and limit have to be negative")
-        q = 'SELECT object_id2, creation_time, keys_values FROM associations WHERE object_id1 = ? AND atype = ?'
-        q += ' ORDER BY creation_time DESC'
+        q = "SELECT object_id2, creation_time, keys_values FROM associations WHERE object_id1 = ? AND atype = ?"
+        q += " ORDER BY creation_time DESC"
         arguments = [object_id1, association_type]
         self.cur.execute(q, arguments)
         keys_values_json = self.cur.fetchall()
@@ -147,9 +147,9 @@ class Database:
     def get_associations_time_range(self, object_id1, association_type, low, high, limit):
         if low < 0 or low > high:
             raise ValueError("Both low and high have to be positive. Also low must be <= high")
-        q = 'SELECT object_id2, creation_time, keys_values FROM associations WHERE object_id1 = ? AND atype = ? AND' \
-            ' creation_time BETWEEN ? AND ?'
-        q += ' ORDER BY creation_time DESC'
+        q = "SELECT object_id2, creation_time, keys_values FROM associations WHERE object_id1 = ? AND atype = ? AND" \
+            " creation_time BETWEEN ? AND ?"
+        q += " ORDER BY creation_time DESC"
         arguments = [object_id1, association_type, low, high]
         self.cur.execute(q, arguments)
         keys_values_json = self.cur.fetchall()
