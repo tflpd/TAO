@@ -37,7 +37,7 @@ class LRUCache:
 
         self.LList = LList(capacity)
 
-    def set_head(self, node):
+    def set_first(self, node):
         if not self.LList.head:
             self.LList.head = node
             self.LList.end = node
@@ -47,7 +47,7 @@ class LRUCache:
             self.LList.head = node
         self.LList.current_size += 1
 
-    def remove(self, node):
+    def delete(self, node):
         if not self.LList.head:
             return
 
@@ -100,8 +100,8 @@ class LRUCache:
         # if this key was already the last accessed no other changes are needed
         if self.LList.head == node:
             return node.value
-        self.remove(node)
-        self.set_head(node)
+        self.delete(node)
+        self.set_first(node)
         return node.value
 
     def set(self, key, value):
@@ -112,13 +112,13 @@ class LRUCache:
 
             # if this key was already the last accessed no other changes are needed
             if self.LList.head != node:
-                self.remove(node)
-                self.set_head(node)
+                self.delete(node)
+                self.set_first(node)
         else:
             new_node = LRUCacheNode(key, value)
             if self.LList.current_size == self.LList.capacity:
                 del self.hash_map[self.LList.end.key]
-                self.remove(self.LList.end)
-            self.set_head(new_node)
+                self.delete(self.LList.end)
+            self.set_first(new_node)
             self.hash_map[key] = new_node
 

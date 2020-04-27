@@ -1,5 +1,7 @@
 import time
 from src.tests import UnitTests, PaperExample, RandomTestsGenerator
+import matplotlib.pyplot as plt
+
 
 OBJECTS_TYPES = {"user", "post", "comment", "location", "checkin", "page"}
 
