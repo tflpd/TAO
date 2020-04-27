@@ -1,5 +1,5 @@
 import time
-from src.tests import UnitTests, PaperExample, RandomTestsGenerator
+from examples_tests import UnitTests, PaperExample, RandomTestsGenerator
 import matplotlib.pyplot as plt
 
 

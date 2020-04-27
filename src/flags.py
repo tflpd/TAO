@@ -4,7 +4,7 @@ DEBUG_FLAG = False
 # And this provides more details thant just their keys for the objects and more detailed messages generally
 VERBOSE_FLAG = False
 # The number of operations that will be executed if the developer has chosen to run the randomly generated test
-NUM_OPS = 1000
+NUM_OPS = 100000
 # Labels for the weights below - DO NOT CHANGE THEM
 write_reqs = ["assoc_add", "assoc_del", "obj_add", "obj_update", "obj_delete"]
 # Weights/probabilities for each of the above write operations. A developer can change their values to provide a

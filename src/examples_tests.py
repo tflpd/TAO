@@ -1,9 +1,9 @@
-from src.LRU_cache import LRUCache
-from src.TAO_cache import TAONodeCacheServer
-from src.database import Database
-from src.flags import NUM_OPS, DEBUG_FLAG, read_reqs_weights, write_reqs_weights, OBJECTS_CACHE_SIZE, \
+from LRU_cache import LRUCache
+from TAO_cache import TAONodeCacheServer
+from database import Database
+from flags import NUM_OPS, DEBUG_FLAG, read_reqs_weights, write_reqs_weights, OBJECTS_CACHE_SIZE, \
     ASSOCIATIONS_CACHE_SIZE, ASSOCIATIONS_COUNTS_CACHE_SIZE, RANDOM
-from src.structs import Object, Association, ObjectType, AssociationType, InverseAssociationType, get_random_assoc_type, \
+from structs import Object, Association, ObjectType, AssociationType, InverseAssociationType, get_random_assoc_type, \
     get_random_object_type
 import random
 

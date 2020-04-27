@@ -2,7 +2,7 @@ import sqlite3
 import os
 import json
 
-from src.structs import Object, Association, invert_assoc
+from structs import Object, Association, invert_assoc
 
 DEFAULT_PATH = os.path.join(os.path.dirname(__file__), 'db.sqlite3')
 

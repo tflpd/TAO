@@ -1,5 +1,5 @@
-from src.flags import VERBOSE_FLAG
-from src.structs import assocs_to_str
+from flags import VERBOSE_FLAG
+from structs import assocs_to_str
 
 
 class LRUCacheNode:

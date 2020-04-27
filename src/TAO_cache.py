@@ -1,6 +1,6 @@
-from src.structs import Object, Association, key_found_in_cache, key_found_in_storage, assocs_to_str
-from src.LRU_cache import LRUCache
-from src.flags import DEBUG_FLAG
+from structs import Object, Association, key_found_in_cache, key_found_in_storage, assocs_to_str
+from LRU_cache import LRUCache
+from flags import DEBUG_FLAG
 
 
 class TAONodeCacheServer:

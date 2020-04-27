@@ -1,5 +1,5 @@
 import random
-from src.flags import VERBOSE_FLAG
+from flags import VERBOSE_FLAG
 
 OBJECTS_TYPES = {"user", "post", "comment", "location", "checkin", "page"}
 
