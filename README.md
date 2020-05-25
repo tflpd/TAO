@@ -4,6 +4,10 @@
 
 The subject of this project is a read-optimized graph data store, called TAO (The Associations and Objects), which was implemented by Facebook and can be found [here](https://www.usenix.org/system/files/conference/atc13/atc13-bronson.pdf). TAO is a system that relies heavily on caching to serve large numbers of low-latency queries. It implements a graph data model in which nodes are identified by fixed-length persistent identifiers (64-bit integers) and it encodes a specific mapping of its graph model to persistent storage and takes responsibility for persistence. In this data model, the main components are objects and associations. Associations naturally model actions that can happen at most once or record state transitions, such as the acceptance of an event invitation, while repeatable actions are better represented as objects. TAO also exposes a minimal API that does not support a complete set of graph queries, but provides sufficient expressiveness to handle most application needs while allowing a scalable and efficient implementation.
 
+### Analysis
+
+For an in-detail analysis of TAO and other related research feel free to take a look at [this](Analysis.pdf)
+
 ## Implementation
 
 This is intended to be a reference implementation (on which future implementations can be based for better understanding of the requirements and the components of TAO) rather than an experimental implementation, thus Python was the chosen language as it enhances readability. This implementation includes the storage, cache, caching policy and API aspects of TAO while it does not involve the distributed system aspect of it. Following as close as possible TAO the cache eviction policy is LRU. Regarding the storage SQLite is being used instead of SQL.
